@@ -1,4 +1,5 @@
 import React from "react";
+import { contractABI, contractAddress } from "../utils/constants";
 import {
   StyleSheet,
   TouchableOpacity,
@@ -11,7 +12,9 @@ import { Text, View } from "../components/Themed";
 import { RootTabScreenProps } from "../types";
 
 import { useWalletConnect } from "@walletconnect/react-native-dapp";
+
 let value = "";
+let txnHash = "";
 const shortenAddress = (address: string) => {
   return `${address.slice(0, 6)}...${address.slice(
     address.length - 4,
@@ -43,14 +46,23 @@ export default function TabOneScreen({
 
   const requestEth = React.useCallback(async () => {
     try {
-      await connector.sendTransaction({
-        data: message,
-        from: `${connector.accounts}`,
-        gasPrice: "0x0ee40be400", // Optional
-        gas: "0xeed9",
-        to: address,
-        value: value,
-      });
+      await connector
+        .sendTransaction({
+          data: message,
+          from: `${connector.accounts}`,
+          gasPrice: "0x0ee40be400", // Optional
+          gas: "0xeed9",
+          to: address,
+          value: value,
+        })
+        .then((result) => {
+          // Returns transaction id (hash)
+          txnHash = result;
+        })
+        .catch((error) => {
+          // Error returned when rejected
+          console.error(error);
+        });
 
       ToastAndroid.showWithGravityAndOffset(
         "Transaction completed successfully",
@@ -83,14 +95,14 @@ export default function TabOneScreen({
             style={styles.input}
             onChangeText={setAddress}
             value={address}
-            placeholder="Enter the wallet address"
+            placeholder="Enter the destination wallet address"
             placeholderTextColor={"#FFF"}
           />
           <TextInput
             style={styles.input}
             onChangeText={setAmount}
             value={amount}
-            placeholder="Enter the amount (eth)"
+            placeholder="Enter the amount in Ethereum(eth)"
             keyboardType="numeric"
             placeholderTextColor={"#FFF"}
           />
@@ -109,6 +121,7 @@ export default function TabOneScreen({
           <TouchableOpacity onPress={killSession} style={styles.buttonStyle}>
             <Text style={styles.buttonTextStyle}>Log out</Text>
           </TouchableOpacity>
+          <Text style={styles.buttonTextStyle}>{txnHash}</Text>
         </>
       )}
     </View>

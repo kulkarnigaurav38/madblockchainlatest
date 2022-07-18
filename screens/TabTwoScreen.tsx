@@ -1,15 +1,25 @@
 import React from "react";
 import axios from "axios";
 import { StyleSheet, TextInput, TouchableOpacity } from "react-native";
-
-import EditScreenInfo from "../components/EditScreenInfo";
 import { Text, View } from "../components/Themed";
 
+let someobj = {
+  jsonres: "",
+  jsonres2: "",
+  balance: 0.0,
+  balance2: 0.0,
+};
 export default function TabTwoScreen() {
-  let jsonres = "";
-  let balance = 0.0;
+  const [flag, setFlag] = React.useState(false);
+  React.useEffect(() => {}, [flag]);
   const [transactionID, setTransactionID] = React.useState("");
-  const etherscanAPItransactionID = () => {
+
+  const etherscanAPItransactionID = (someobj: {
+    jsonres: any;
+    jsonres2: any;
+    balance: any;
+    balance2: any;
+  }) => {
     axios
       .get("https://api-ropsten.etherscan.io/api", {
         params: {
@@ -20,44 +30,68 @@ export default function TabTwoScreen() {
         },
       })
       .then(function (response) {
-        jsonres = JSON.stringify(response.data.result.from);
-        console.log(jsonres);
+        someobj.jsonres = JSON.stringify(response.data.result.from);
+        someobj.jsonres2 = JSON.stringify(response.data.result.to);
+        console.log(someobj.jsonres);
+        console.log(someobj.jsonres2);
       })
       .catch(function (error) {
         console.log(error);
       });
-  };
-  const etherscanAPIbalance = () => {
-    axios
-      .get("https://api-ropsten.etherscan.io/api", {
-        params: {
-          module: "account",
-          action: "balancemulti",
-          address: "0x09b8f52555d0070c0e6a68564644234b5e7c0322",
-          tag: "latest",
-          apikey: "5Y34WF54H6X26G4EDTRIZAWFT2E5NVWWIG",
-        },
-      })
-      .then(function (response) {
-        balance =
-          parseInt(JSON.stringify(response.data.result.balance)) /
-          1000000000000000000;
-        console.log(JSON.stringify(response));
-      })
-      .catch(function (error) {
-        console.log(error);
-      });
+    setTimeout(
+      () => {
+        axios
+          .get("https://api-ropsten.etherscan.io/api", {
+            params: {
+              module: "account",
+              action: "balancemulti",
+              address: JSON.parse(someobj.jsonres),
+              tag: "latest",
+              apikey: "5Y34WF54H6X26G4EDTRIZAWFT2E5NVWWIG",
+            },
+          })
+          .then(function (response) {
+            someobj.balance =
+              parseInt(response.data.result[0].balance) / 1000000000000000000;
+
+            console.log(someobj.balance);
+          })
+          .catch(function (error) {
+            console.log(error);
+          });
+        axios
+          .get("https://api-ropsten.etherscan.io/api", {
+            params: {
+              module: "account",
+              action: "balancemulti",
+              address: JSON.parse(someobj.jsonres2),
+              tag: "latest",
+              apikey: "5Y34WF54H6X26G4EDTRIZAWFT2E5NVWWIG",
+            },
+          })
+          .then(function (response) {
+            someobj.balance2 =
+              parseInt(response.data.result[0].balance) / 1000000000000000000;
+            console.log(someobj.balance2);
+            setTimeout(() => {
+              setFlag(true);
+            }, 2000);
+          })
+          .catch(function (error) {
+            console.log(error);
+          });
+      },
+      500,
+      someobj
+    );
   };
 
   const submit = () => {
-    etherscanAPItransactionID();
-    etherscanAPIbalance();
+    etherscanAPItransactionID(someobj);
   };
+
   return (
     <View style={styles.container}>
-      {/* <Text style={styles.title}>Tab Two</Text>
-      <View style={styles.separator} lightColor="#eee" darkColor="rgba(255,255,255,0.1)" />
-      <EditScreenInfo path="/screens/TabTwoScreen.tsx" /> */}
       <TextInput
         style={styles.input}
         onChangeText={setTransactionID}
@@ -65,29 +99,27 @@ export default function TabTwoScreen() {
         placeholder="Enter the Transaction Hash/ID"
         placeholderTextColor={"#FFF"}
       />
-      {/* <TextInput
-        style={styles.input}
-        onChangeText={setAmount}
-        value={amount}
-        placeholder="Enter the amount (eth)"
-        keyboardType="numeric"
-        placeholderTextColor={"#FFF"}
-      />
-      <TextInput
-        style={styles.input}
-        onChangeText={setMessage}
-        value={message}
-        placeholder="Enter a message"
-        placeholderTextColor={"#FFF"}
-      /> */}
 
-      {/* <Text>{shortenAddress(connector.accounts[0])}</Text> */}
       <TouchableOpacity onPress={submit} style={styles.buttonStyle}>
         <Text style={styles.buttonTextStyle}>Submit</Text>
       </TouchableOpacity>
-      {/* <TouchableOpacity onPress={killSession} style={styles.buttonStyle}>
-        <Text style={styles.buttonTextStyle}>Log out</Text>
-      </TouchableOpacity> */}
+      {flag && (
+        <>
+          {console.log(someobj)}
+          <Text style={styles.title}>
+            Wallet 1 (From) Address : {someobj.jsonres}
+          </Text>
+          <Text style={styles.title}>
+            Wallet 2 (To) Address : {someobj.jsonres2}
+          </Text>
+          <Text style={styles.title}>
+            Balance in Wallet 1 (From): {someobj.balance}
+          </Text>
+          <Text style={styles.title}>
+            Balance in Wallet 2 (To): {someobj.balance2}
+          </Text>
+        </>
+      )}
     </View>
   );
 }
