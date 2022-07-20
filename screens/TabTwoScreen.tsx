@@ -21,7 +21,7 @@ export default function TabTwoScreen() {
     balance2: any;
   }) => {
     axios
-      .get("https://api-ropsten.etherscan.io/api", {
+      .get("https://api-goerli.etherscan.io/api", {
         params: {
           module: "proxy",
           action: "eth_getTransactionByHash",
@@ -41,7 +41,7 @@ export default function TabTwoScreen() {
     setTimeout(
       () => {
         axios
-          .get("https://api-ropsten.etherscan.io/api", {
+          .get("https://api-goerli.etherscan.io/api", {
             params: {
               module: "account",
               action: "balancemulti",
@@ -60,7 +60,7 @@ export default function TabTwoScreen() {
             console.log(error);
           });
         axios
-          .get("https://api-ropsten.etherscan.io/api", {
+          .get("https://api-goerli.etherscan.io/api", {
             params: {
               module: "account",
               action: "balancemulti",
